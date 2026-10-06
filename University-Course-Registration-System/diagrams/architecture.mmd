@@ -1,0 +1,36 @@
+flowchart TD
+    subgraph U[Users]
+        S[Student]
+        F[Faculty]
+        A[Registrar / Admin]
+    end
+    subgraph APP[Application / Thin Client]
+        UI[Python CLI or SQL Developer<br/>calls procedures, reads views]
+    end
+    subgraph DB[Oracle Database]
+        SP[PL/SQL Procedures and Functions]
+        TR[Triggers: audit, enrolled_count, CGPA]
+        TBL[(Base Tables + Constraints)]
+        VW[[Views]]
+        TX[Transactions + Row Locking]
+    end
+    subgraph OUT[Output]
+        O1[Register / reject message]
+        O2[Transcript and CGPA]
+        O3[Seat and faculty reports]
+        O4[Audit trail]
+    end
+    S --> UI
+    F --> UI
+    A --> UI
+    UI --> SP
+    SP --> TX
+    TX --> TBL
+    SP --> TR
+    TR --> TBL
+    UI --> VW
+    VW --> TBL
+    SP --> O1
+    VW --> O2
+    VW --> O3
+    TR --> O4

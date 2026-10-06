@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant St as Student
+    participant App as Thin Client
+    participant P as sp_register_student
+    participant DB as Oracle DB
+    St->>App: register(section)
+    App->>P: CALL sp_register_student
+    P->>DB: SELECT section FOR UPDATE (lock row)
+    P->>DB: fn_prereqs_met?
+    P->>DB: timetable clash?
+    alt seat free and rules pass
+        P->>DB: INSERT ENROLLMENT (REGISTERED)
+        DB-->>P: triggers: enrolled_count++, audit
+        P-->>App: COMMIT "Registered"
+    else section full
+        P->>DB: INSERT WAITLIST
+        P-->>App: COMMIT "Waitlisted"
+    else rule violation
+        P-->>App: ROLLBACK + error
+    end
+    App-->>St: result

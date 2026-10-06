@@ -1,0 +1,89 @@
+erDiagram
+    DEPARTMENT ||--o{ PROGRAM : offers
+    DEPARTMENT ||--o{ COURSE : offers
+    DEPARTMENT ||--o{ FACULTY : employs
+    FACULTY |o--o| DEPARTMENT : heads
+    PROGRAM ||--o{ STUDENT : enrolls
+    COURSE ||--o{ PREREQUISITE : "is required by"
+    COURSE ||--o{ PREREQUISITE : "requires (prereq)"
+    COURSE ||--o{ SECTION : offered_as
+    FACULTY ||--o{ SECTION : teaches
+    TERM ||--o{ SECTION : scheduled_in
+    ROOM ||--o{ SECTION : hosted_in
+    TIME_SLOT ||--o{ SECTION : timed_at
+    STUDENT ||--o{ ENROLLMENT : registers
+    SECTION ||--o{ ENROLLMENT : has
+    STUDENT ||--o{ WAITLIST : joins
+    SECTION ||--o{ WAITLIST : holds
+    GRADE_SCALE ||--o{ ENROLLMENT : classifies
+    ENROLLMENT ||--o{ ENROLLMENT_AUDIT : logged_in
+
+    DEPARTMENT { int dept_id PK
+        varchar dept_name
+        int hod_faculty_id FK }
+    PROGRAM { int program_id PK
+        varchar program_name
+        int dept_id FK
+        int total_credits_required }
+    STUDENT { int student_id PK
+        varchar reg_no UK
+        varchar name
+        date dob
+        varchar email UK
+        int program_id FK
+        int admission_year
+        number cgpa }
+    FACULTY { int faculty_id PK
+        varchar name
+        int dept_id FK
+        varchar designation
+        varchar email UK }
+    COURSE { int course_id PK
+        varchar course_code UK
+        varchar title
+        int credits
+        int dept_id FK
+        varchar course_type }
+    PREREQUISITE { int course_id PK_FK
+        int prereq_course_id PK_FK }
+    TERM { int term_id PK
+        varchar term_name
+        date start_date
+        date end_date
+        char is_active }
+    TIME_SLOT { int slot_id PK
+        varchar day_of_week
+        varchar start_time
+        varchar end_time }
+    ROOM { int room_id PK
+        varchar building
+        int room_capacity }
+    SECTION { int section_id PK
+        int course_id FK
+        int faculty_id FK
+        int term_id FK
+        int room_id FK
+        int slot_id FK
+        int capacity
+        int enrolled_count }
+    ENROLLMENT { int enrollment_id PK
+        int student_id FK
+        int section_id FK
+        varchar status
+        varchar grade FK
+        number grade_points
+        date enrolled_on }
+    WAITLIST { int waitlist_id PK
+        int section_id FK
+        int student_id FK
+        int position
+        timestamp requested_at }
+    GRADE_SCALE { varchar grade PK
+        int min_marks
+        number points }
+    ENROLLMENT_AUDIT { int audit_id PK
+        int enrollment_id FK
+        varchar old_status
+        varchar new_status
+        varchar changed_by
+        timestamp changed_at }
