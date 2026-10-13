@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>University Course Registration System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">UC</div>
+    <div>
+      <h1>University Course Registration</h1>
+      <p>Academic Records Management System &middot; Oracle PL/SQL &middot; term <b>{{ active_term }}</b></p>
+    </div>
+  </div>
+  <div class="top-right">
+    <span id="conn" class="pill pill-wait">connecting…</span>
+    <button id="refresh" class="btn btn-ghost">↻ Refresh</button>
+  </div>
+</header>
+
+<div id="banner" class="banner hidden"></div>
+
+<main>
+  <!-- KPI tiles -->
+  <section class="kpis">
+    <div class="kpi"><span class="kpi-num" id="k-sections">—</span><span class="kpi-lbl">Active sections</span></div>
+    <div class="kpi"><span class="kpi-num" id="k-students">—</span><span class="kpi-lbl">Students</span></div>
+    <div class="kpi"><span class="kpi-num" id="k-wait">—</span><span class="kpi-lbl">Waitlisted</span></div>
+    <div class="kpi"><span class="kpi-num" id="k-util">—</span><span class="kpi-lbl">Avg utilization</span></div>
+  </section>
+
+  <div class="grid">
+    <!-- LEFT: sections -->
+    <section class="card col-main">
+      <div class="card-head"><h2>Course Sections</h2><span class="muted">live seat counts</span></div>
+      <div class="table-wrap">
+        <table id="sections">
+          <thead><tr><th>ID</th><th>Course</th><th>Faculty</th><th>Seats</th><th class="fill-col">Utilization</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RIGHT: action console -->
+    <section class="card col-side">
+      <div class="card-head"><h2>Action Console</h2></div>
+      <div class="tabs" id="action-tabs">
+        <button class="tab active" data-tab="register">Register</button>
+        <button class="tab" data-tab="drop">Drop</button>
+        <button class="tab" data-tab="grade">Post grade</button>
+      </div>
+
+      <div class="tabpane active" data-pane="register">
+        <label>Student</label><select id="r-student"></select>
+        <label>Section</label><select id="r-section"></select>
+        <button class="btn btn-primary" onclick="doAction('register')">Register student</button>
+        <div class="shortcuts">
+          <span class="muted small">Demo shortcuts:</span>
+          <button class="chip" data-s="6" data-sec="14">Success · Arjun→CS101</button>
+          <button class="chip" data-s="5" data-sec="10">Prereq fail · Priya→CS301</button>
+          <button class="chip" data-s="3" data-sec="11">Clash · Neil→CS302</button>
+          <button class="chip" data-s="2" data-sec="13">Full→waitlist · Rehaan→CS202</button>
+        </div>
+      </div>
+
+      <div class="tabpane" data-pane="drop">
+        <label>Student</label><select id="d-student"></select>
+        <label>Section</label><select id="d-section"></select>
+        <button class="btn btn-primary" onclick="doAction('drop')">Drop registration</button>
+        <p class="muted small">A drop frees the seat and auto-promotes the first eligible waitlisted student.</p>
+        <div class="shortcuts">
+          <span class="muted small">Demo:</span>
+          <button class="chip" data-s="4" data-sec="13">Drop Sanjay→CS202 (promotes waitlist)</button>
+        </div>
+      </div>
+
+      <div class="tabpane" data-pane="grade">
+        <label>Student</label><select id="g-student"></select>
+        <label>Section</label><select id="g-section"></select>
+        <label>Grade</label>
+        <select id="g-grade"><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select>
+        <button class="btn btn-primary" onclick="doAction('grade')">Post grade</button>
+        <div class="shortcuts">
+          <span class="muted small">Demo:</span>
+          <button class="chip" data-s="3" data-sec="10" data-g="A">Grade Neil CS301 = A (CGPA updates)</button>
+        </div>
+      </div>
+
+      <div class="console">
+        <div class="console-head">Database response</div>
+        <div id="log" class="console-body"><div class="log-line muted">Run an action — Oracle's reply appears here.</div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom tabs -->
+  <section class="card">
+    <div class="tabs" id="view-tabs">
+      <button class="tab active" data-tab="students">Students &amp; CGPA</button>
+      <button class="tab" data-tab="transcript">Transcript</button>
+      <button class="tab" data-tab="waitlist">Waitlist</button>
+      <button class="tab" data-tab="audit">Audit trail</button>
+      <button class="tab" data-tab="faculty">Faculty load</button>
+    </div>
+
+    <div class="tabpane active" data-pane="students">
+      <div class="table-wrap"><table id="students"><thead><tr><th>ID</th><th>Reg. No</th><th>Name</th><th>Program</th><th>CGPA</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tabpane" data-pane="transcript">
+      <div class="inline"><label>Student</label><select id="t-student"></select><button class="btn btn-ghost" onclick="loadTranscript()">Show transcript</button></div>
+      <div id="transcript-out"></div>
+    </div>
+    <div class="tabpane" data-pane="waitlist">
+      <div class="table-wrap"><table id="waitlist"><thead><tr><th>Section</th><th>Course</th><th>Reg. No</th><th>Name</th><th>Position</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tabpane" data-pane="audit">
+      <div class="table-wrap"><table id="audit"><thead><tr><th>#</th><th>Reg. No</th><th>Course</th><th>Old</th><th>New</th><th>By</th><th>Time</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tabpane" data-pane="faculty">
+      <div class="table-wrap"><table id="faculty"><thead><tr><th>Faculty</th><th>Sections</th><th>Courses</th><th>Registered</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <footer>All academic rules are enforced inside Oracle — this web client only calls stored procedures and reads views.</footer>
+</main>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
